@@ -18,18 +18,18 @@ impl AntPoint {
     }
 
     pub fn set_x(&mut self, x: i32) {
-        self.x = x;
+        self.x = x
     }
 
     pub fn set_y(&mut self, y: i32) {
-        self.y = y;
+        self.y = y
     }
 
     pub fn move_x(&mut self, x: i32) {
-        self.x += x;
+        self.x += x
     }
 
     pub fn move_y(&mut self, y: i32) {
-        self.y += y;
+        self.y += y
     }
 }
