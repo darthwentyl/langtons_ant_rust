@@ -1,10 +1,16 @@
 use super::ant_direction::AntDirection;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
-pub struct Color {
-    pub r: u8,
-    pub g: u8,
-    pub b: u8,
+pub struct AntColor {
+    r: u8,
+    g: u8,
+    b: u8,
+}
+
+impl AntColor {
+    pub fn new(r: u8, g: u8, b: u8) -> Self {
+        AntColor { r, g, b }
+    }
 }
 
 #[derive(Debug)]
@@ -16,8 +22,8 @@ pub struct Ant {
     direction: AntDirection,
 }
 
-const CLOCKWISE_COLOR: Color = Color{r: 255, g: 0, b: 0};
-const COUNTER_CLOCKWISE_COLOR: Color = Color{r: 0, g: 255, b: 0};
+const CLOCKWISE_COLOR: AntColor = AntColor{r: 255, g: 0, b: 0};
+const COUNTER_CLOCKWISE_COLOR: AntColor = AntColor{r: 0, g: 255, b: 0};
 
 impl Ant {
     pub fn new(x: usize, y: usize, x_size: usize, y_size: usize, direction: AntDirection) -> Self {
@@ -38,7 +44,7 @@ impl Ant {
         self.direction
     }
 
-    pub fn make_step(&mut self, color: &Color) -> Color {
+    pub fn make_step(&mut self, color: &AntColor) -> AntColor {
         let new_color = match *color {
             CLOCKWISE_COLOR => {
                 println!("CLOCKWISE_COLOR");
