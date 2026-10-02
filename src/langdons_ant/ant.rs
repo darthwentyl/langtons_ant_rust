@@ -1,7 +1,7 @@
 #[derive(Debug)]
 pub enum AntColor {
     Clockwise,
-    CounterClockwise,
+    Counterclockwise,
 }
 
 #[derive(Debug)]
@@ -34,9 +34,9 @@ impl Ant {
         let new_color = match color {
             AntColor::Clockwise => {
                 self.direction.move_clockwise();
-                AntColor::CounterClockwise
+                AntColor::Counterclockwise
             }
-            AntColor::CounterClockwise => {
+            AntColor::Counterclockwise => {
                 self.direction.move_counterclockwise();
                 AntColor::Clockwise
             }

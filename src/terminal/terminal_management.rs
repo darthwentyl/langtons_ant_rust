@@ -20,17 +20,19 @@ pub trait TerminalComponentDraw {
 }
 
 impl TerminalManagement {
-    pub fn new(default_color: TerminalCellColor) -> Self {
+    pub fn new(start_term_size: TerminalSize, default_color: TerminalCellColor) -> Self {
         TerminalManagement::enable_raw_mode();
 
-        let size = TerminalSize::new();
+        let cols = start_term_size.cols();
+        let rows = start_term_size.rows();
+
         let screen_buff = vec![
-                vec![default_color; size.cols()];
-                size.rows() * 2
+                vec![default_color; cols];
+                rows * 2
             ];
 
         Self {
-            size: size,
+            size: start_term_size,
             screen_buff: screen_buff
         }
     }

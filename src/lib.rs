@@ -1,4 +1,5 @@
 use std::{thread, time::Duration};
+use rand::random_range;
 
 pub mod langdons_ant {
     pub mod ant;
@@ -17,6 +18,7 @@ use langdons_ant::ant::{
 };
 
 use terminal::terminal_cell_color::TerminalCellColor;
+use terminal::terminal_size::TerminalSize;
 use terminal::terminal_management::{
     TerminalManagement,
     TerminalComponentDraw,
@@ -24,7 +26,7 @@ use terminal::terminal_management::{
 };
 
 const CLOCKWISE_COLOR: TerminalCellColor = TerminalCellColor::new(0, 255, 0);
-const COUNTER_CLOCKWISE_COLOR: TerminalCellColor = TerminalCellColor::new(0, 0, 255);
+const COUNTERCLOCKWISE_COLOR: TerminalCellColor = TerminalCellColor::new(0, 0, 255);
 
 pub struct AntTermVisualization {
     terminal: TerminalManagement,
@@ -33,13 +35,17 @@ pub struct AntTermVisualization {
 
 impl AntTermVisualization {
     pub fn new() -> Self {
-        let terminal = TerminalManagement::new(CLOCKWISE_COLOR);
+        let terminal_start_size = TerminalSize::new();
+        let (x, y, direction, color) =
+            AntTermVisualization::get_start_position(terminal_start_size.cols(), terminal_start_size.rows());
+
+        let terminal = TerminalManagement::new(terminal_start_size, color);
         let ant = Ant::new(
-            terminal.cols() / 2,
-            terminal.rows(),
+            x,
+            y,
             terminal.cols(),
             terminal.rows() * 2,
-            AntDirection::Right
+            direction,
         );
         Self {
             terminal: terminal,
@@ -53,12 +59,29 @@ impl AntTermVisualization {
             thread::sleep(Duration::from_millis(10));
             self.terminal.draw_elem(&mut self.ant);
             self.terminal.draw_screen();
-            if counter == 1000 {
+            if counter == 100 {
                 break;
             }
             counter += 1;
         }
     }
+
+    fn get_start_position(cols: usize, rows: usize) -> (usize, usize, AntDirection, TerminalCellColor) {
+        let x = random_range(0..cols);
+        let y = random_range(0..rows);
+        let direction = match random_range(0..4) {
+            0 => AntDirection::Up,
+            1 => AntDirection::Right,
+            2 => AntDirection::Down,
+            _ => AntDirection::Left,
+        };
+        let color = match random_range(0..2) {
+            0 => CLOCKWISE_COLOR,
+            _ => COUNTERCLOCKWISE_COLOR,
+        };
+        (x, y, direction, color)
+    }
+
 }
 
 impl TerminalComponentDraw for Ant {
@@ -69,10 +92,10 @@ impl TerminalComponentDraw for Ant {
         buffer[curr_y][curr_x] = match buffer[curr_y][curr_x] {
             CLOCKWISE_COLOR => {
                 self.make_step(AntColor::Clockwise);
-                COUNTER_CLOCKWISE_COLOR
+                COUNTERCLOCKWISE_COLOR
             },
-            COUNTER_CLOCKWISE_COLOR => {
-                self.make_step(AntColor::CounterClockwise);
+            COUNTERCLOCKWISE_COLOR => {
+                self.make_step(AntColor::Counterclockwise);
                 CLOCKWISE_COLOR
             },
             _ => panic!("Color is not defined for algorithm: {}", buffer[curr_y][curr_x]),
