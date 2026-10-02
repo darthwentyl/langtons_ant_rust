@@ -1,24 +1,15 @@
-#[macro_export]
-macro_rules! terminal_color {
-    ($r:expr, $g:expr, $b:expr) => {
-        $crate::terminal::terminal_cell_color::TerminalCellColor {
-            r: $r,
-            g: $g,
-            b: $b,
-        }
-    };
-}
+use std::fmt;
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct TerminalCellColor {
-    pub r: u8,
-    pub g: u8,
-    pub b: u8,
+    r: u8,
+    g: u8,
+    b: u8,
 }
 
 impl TerminalCellColor {
-    pub fn new(r: u8, g: u8, b: u8) -> Self {
-        TerminalCellColor { r, g, b }
+    pub const fn new(r: u8, g: u8, b: u8) -> Self {
+        Self { r, g, b }
     }
 
     pub fn set_fg_color(&self) -> String {
@@ -27,5 +18,11 @@ impl TerminalCellColor {
 
     pub fn set_bg_color(&self) -> String {
         format!("\x1b[48;2;{};{};{}m", self.r, self.g, self.b)
+    }
+}
+
+impl fmt::Display for TerminalCellColor {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Color(r{}, g{}, b{}", self.r, self.g, self.b)
     }
 }

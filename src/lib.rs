@@ -1,6 +1,5 @@
 pub mod langdons_ant {
     pub mod ant;
-    pub mod ant_direction;
 }
 
 pub mod terminal {

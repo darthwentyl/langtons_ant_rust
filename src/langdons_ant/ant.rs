@@ -1,16 +1,7 @@
-use super::ant_direction::AntDirection;
-
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub struct AntColor {
-    pub r: u8,
-    pub g: u8,
-    pub b: u8,
-}
-
-impl AntColor {
-    pub fn new(r: u8, g: u8, b: u8) -> Self {
-        AntColor { r, g, b }
-    }
+#[derive(Debug)]
+pub enum AntColor {
+    Clockwise,
+    CounterClockwise,
 }
 
 #[derive(Debug)]
@@ -22,14 +13,9 @@ pub struct Ant {
     direction: AntDirection,
 }
 
-const CLOCKWISE_COLOR: AntColor = AntColor{r: 0, g: 0, b: 255};
-const COUNTER_CLOCKWISE_COLOR: AntColor = AntColor{r: 0, g: 255, b: 0};
-
 impl Ant {
     pub fn new(x: usize, y: usize, x_size: usize, y_size: usize, direction: AntDirection) -> Self {
-        Ant {
-            x, y, x_size, y_size, direction
-        }
+        Self { x, y, x_size, y_size, direction }
     }
 
     pub fn x(&self) -> usize {
@@ -44,19 +30,15 @@ impl Ant {
         self.direction
     }
 
-    pub fn make_step(&mut self, color: &AntColor) -> AntColor {
-        let new_color = match *color {
-            CLOCKWISE_COLOR => {
+    pub fn make_step(&mut self, color: AntColor) -> AntColor {
+        let new_color = match color {
+            AntColor::Clockwise => {
                 self.direction.move_clockwise();
-                COUNTER_CLOCKWISE_COLOR
+                AntColor::CounterClockwise
             }
-            COUNTER_CLOCKWISE_COLOR => {
+            AntColor::CounterClockwise => {
                 self.direction.move_counterclockwise();
-                CLOCKWISE_COLOR
-            }
-            _ =>  {
-                self.direction.move_clockwise();
-                CLOCKWISE_COLOR
+                AntColor::Clockwise
             }
         };
         self.move_ant();
@@ -97,3 +79,30 @@ impl Ant {
     }
 }
 
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum AntDirection {
+    Up,
+    Right,
+    Down,
+    Left,
+}
+
+impl AntDirection {
+    pub fn move_clockwise(&mut self) {
+        *self = match self {
+            Self::Up => Self::Right,
+            Self::Right => Self::Down,
+            Self::Down => Self::Left,
+            Self::Left => Self::Up,
+        };
+    }
+
+    pub fn move_counterclockwise(&mut self) {
+        *self = match self {
+            Self::Up => Self::Left,
+            Self::Left => Self::Down,
+            Self::Down => Self::Right,
+            Self::Right => Self::Up,
+        }
+    }
+}

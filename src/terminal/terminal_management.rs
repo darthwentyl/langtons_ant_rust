@@ -1,6 +1,5 @@
 use std::io::{self, Write};
 
-use crate::terminal_color;
 use super::terminal_cell_color::TerminalCellColor;
 use super::terminal_size::TerminalSize;
 
@@ -21,16 +20,16 @@ pub trait TerminalComponentDraw {
 }
 
 impl TerminalManagement {
-    pub fn new() -> Self {
+    pub fn new(default_color: TerminalCellColor) -> Self {
         TerminalManagement::enable_raw_mode();
 
         let size = TerminalSize::new();
         let screen_buff = vec![
-                vec![TerminalCellColor::new(0, 0, 255); size.cols()];
+                vec![default_color; size.cols()];
                 size.rows() * 2
             ];
 
-        TerminalManagement {
+        Self {
             size: size,
             screen_buff: screen_buff
         }
