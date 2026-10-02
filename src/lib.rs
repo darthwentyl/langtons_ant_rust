@@ -1,4 +1,11 @@
-use std::{thread, time::Duration};
+use std::{
+    sync::{
+        Arc, atomic::{
+            AtomicBool,
+            Ordering,
+        }
+    }, thread, time::Duration
+};
 use rand::random_range;
 
 pub mod langdons_ant {
@@ -54,15 +61,18 @@ impl AntTermVisualization {
     }
 
     pub fn visualize(&mut self) {
-        let mut counter: usize = 0;
-        loop {
+        let running =Arc::new(AtomicBool::new(true));
+        let running_for_handler = Arc::clone(&running);
+
+        ctrlc::set_handler(move || {
+            running_for_handler.store(false, Ordering::SeqCst);
+        })
+        .expect("Error setting Ctrl+C handler");
+
+        while running.load(Ordering::SeqCst) {
             thread::sleep(Duration::from_millis(10));
             self.terminal.draw_elem(&mut self.ant);
             self.terminal.draw_screen();
-            if counter == 100 {
-                break;
-            }
-            counter += 1;
         }
     }
 
