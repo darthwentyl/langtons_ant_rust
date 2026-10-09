@@ -96,6 +96,21 @@ impl TerminalManagement {
         stdout.flush().unwrap();
     }
 
+    pub fn draw_screen_field(buffer: &mut TerminalScreenBuff, x: usize, y: usize, next_y: usize, block_char: char) {
+        let mut stdout = io::stdout().lock();
+        write!(
+                stdout,
+                "\x1b[{};{}H{}{}{}{}",
+                y / 2,
+                x,
+                buffer[y][x].set_fg_color(),
+                buffer[next_y][x].set_bg_color(),
+                block_char,
+                RESET
+            ).unwrap();
+        stdout.flush().unwrap();
+    }
+
     fn enable_raw_mode() {
         let mut stdout = io::stdout().lock();
         write!(stdout,

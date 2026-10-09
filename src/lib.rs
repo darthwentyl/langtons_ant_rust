@@ -8,7 +8,6 @@ use std::{
     },
     thread,
     error::Error,
-    io::{self, Write},
 };
 use rand::random_range;
 
@@ -43,8 +42,8 @@ use terminal::terminal_management::{
     TerminalScreenBuff,
 };
 
-const CLOCKWISE_COLOR: TerminalCellColor = TerminalCellColor::new(0, 255, 0);
-const COUNTERCLOCKWISE_COLOR: TerminalCellColor = TerminalCellColor::new(0, 0, 255);
+const CLOCKWISE_COLOR: TerminalCellColor = TerminalCellColor::new(0, 128, 0);
+const COUNTERCLOCKWISE_COLOR: TerminalCellColor = TerminalCellColor::new(0, 0, 128);
 
 pub struct AntTermVisualization {
     terminal: TerminalManagement,
@@ -155,28 +154,9 @@ impl TerminalComponentDraw for Ant {
             _ => panic!("Color is not defined for algorithm: {}", buffer[curr_y][curr_x]),
         };
 
-
-        let mut stdout = io::stdout().lock();
-        if curr_y % 2 == 0 {
-            write!(
-                stdout,
-                "\x1b[{};{}H{}{}▀\x1b[0m",
-                curr_y / 2,
-                curr_x,
-                buffer[curr_y][curr_x].set_fg_color(),
-                buffer[curr_y + 1][curr_x].set_bg_color(),
-            ).unwrap();
-            stdout.flush().unwrap();
-        } else {
-            write!(
-                stdout,
-                "\x1b[{};{}H{}{}▄\x1b[0m",
-                curr_y / 2,
-                curr_x,
-                buffer[curr_y][curr_x].set_fg_color(),
-                buffer[curr_y - 1][curr_x].set_bg_color(),
-            ).unwrap();
+        match curr_y % 2 {
+            0 => TerminalManagement::draw_screen_field(buffer, curr_x, curr_y, curr_y + 1, '▀'),
+            _ => TerminalManagement::draw_screen_field(buffer, curr_x, curr_y, curr_y - 1, '▄')
         }
-        stdout.flush().unwrap();
     }
 }
