@@ -97,17 +97,30 @@ impl TerminalManagement {
     }
 
     fn enable_raw_mode() {
-        print!("{HIDE_CURSOR}{CLEAR_SCREEN}");
-        io::stdout().flush().unwrap();
+        let mut stdout = io::stdout().lock();
+        write!(stdout,
+            "{}{}",
+            HIDE_CURSOR,
+            CLEAR_SCREEN)
+        .unwrap();
+        stdout.flush().unwrap();
     }
 
-    fn disable_raw_mode() {
-        println!("{SHOW_CURSOR}{RESET}");
+    fn disable_raw_mode(rows: usize) {
+        let mut stdout = io::stdout().lock();
+        write!(stdout,
+            "\x1b[{};1H{}{}\n",
+            rows,
+            SHOW_CURSOR,
+            RESET)
+        .unwrap();
+        stdout.flush().unwrap();
     }
 }
 
 impl Drop for TerminalManagement {
     fn drop(&mut self) {
-        TerminalManagement::disable_raw_mode();
+        self.draw_screen();
+        TerminalManagement::disable_raw_mode(self.rows());
     }
 }
