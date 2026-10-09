@@ -33,12 +33,37 @@ impl TerminalManagement {
 
         Self {
             size: start_term_size,
-            screen_buff: screen_buff
+            screen_buff: screen_buff,
         }
     }
 
     pub fn update_terminal_state(&mut self) {
-        self.size.update_terminal_size();
+        let old_cols = self.size.cols();
+        let old_rows = self.size.rows();
+
+        let new_size = TerminalSize::new();
+        self.size = new_size;
+
+        let red = TerminalCellColor::new(255, 0, 0);
+        let mut new_screen_buff = vec![
+                vec![red; self.size.cols()];
+                self.size.rows() * 2
+            ];
+
+        for y in 0..(self.size.rows() * 2) {
+            for x in 0..self.size.cols() {
+                let old_x = x * old_cols / self.size.cols();
+                let old_y = y * old_rows / self.size.rows();
+                new_screen_buff[y][x] = self.screen_buff[old_y][old_x];
+            }
+        }
+
+        self.screen_buff = new_screen_buff;
+
+        let mut stdout = io::stdout().lock();
+        stdout.write_all(CLEAR_SCREEN.as_bytes()).unwrap();
+        stdout.flush().unwrap();
+
     }
 
     pub fn cols(&self) -> usize {
@@ -53,9 +78,8 @@ impl TerminalManagement {
         item.draw(&mut self.screen_buff);
     }
 
-    pub fn draw_screen(&mut self) {
+    pub fn draw_screen(&self) {
         let mut output = String::new();
-
         for ty in 0..self.size.rows() {
             output.push_str(&format!("\x1b[{};1H", ty + 1));
             for tx in 0..self.size.cols() {
@@ -67,9 +91,9 @@ impl TerminalManagement {
 
         output.push_str(&format!("{}", RESET));
 
-        print!("{}", output);
-        io::stdout().flush().unwrap();
-
+        let mut stdout = io::stdout().lock();
+        stdout.write_all(output.as_bytes()).unwrap();
+        stdout.flush().unwrap();
     }
 
     fn enable_raw_mode() {
@@ -78,8 +102,7 @@ impl TerminalManagement {
     }
 
     fn disable_raw_mode() {
-        print!("{SHOW_CURSOR}{RESET}");
-        io::stdout().flush().unwrap();
+        println!("{SHOW_CURSOR}{RESET}");
     }
 }
 

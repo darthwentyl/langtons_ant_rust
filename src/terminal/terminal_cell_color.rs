@@ -1,6 +1,6 @@
 use std::fmt;
 
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Copy)]
 pub struct TerminalCellColor {
     r: u8,
     g: u8,
@@ -23,6 +23,6 @@ impl TerminalCellColor {
 
 impl fmt::Display for TerminalCellColor {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Color(r{}, g{}, b{}", self.r, self.g, self.b)
+        write!(f, "Color(r: {}, g: {}, b: {})", self.r, self.g, self.b)
     }
 }

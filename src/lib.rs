@@ -1,12 +1,23 @@
+use core::time;
 use std::{
     sync::{
         Arc, atomic::{
             AtomicBool,
             Ordering,
-        }
-    }, thread, time::Duration
+        },
+    },
+    thread,
+    error::Error,
+    io::{self, Write},
 };
 use rand::random_range;
+
+#[cfg(unix)]
+use signal_hook::{
+    consts::SIGINT,
+    consts::SIGWINCH,
+    iterator::Signals
+};
 
 pub mod langdons_ant {
     pub mod ant;
@@ -44,7 +55,7 @@ impl AntTermVisualization {
     pub fn new() -> Self {
         let terminal_start_size = TerminalSize::new();
         let (x, y, direction, color) =
-            AntTermVisualization::get_start_position(terminal_start_size.cols(), terminal_start_size.rows());
+            AntTermVisualization::get_start_position(terminal_start_size.cols(), terminal_start_size.rows() * 2);
 
         let terminal = TerminalManagement::new(terminal_start_size, color);
         let ant = Ant::new(
@@ -60,20 +71,53 @@ impl AntTermVisualization {
         }
     }
 
-    pub fn visualize(&mut self) {
-        let running =Arc::new(AtomicBool::new(true));
+    pub fn visualize(&mut self) -> Result<(), Box<dyn Error>> {
+        let running = Arc::new(AtomicBool::new(true));
         let running_for_handler = Arc::clone(&running);
 
-        ctrlc::set_handler(move || {
-            running_for_handler.store(false, Ordering::SeqCst);
-        })
-        .expect("Error setting Ctrl+C handler");
+        let terminal_size_changed = Arc::new(AtomicBool::new(false));
+        let terminal_size_changed_handler = Arc::clone(&terminal_size_changed);
 
-        while running.load(Ordering::SeqCst) {
-            thread::sleep(Duration::from_millis(10));
-            self.terminal.draw_elem(&mut self.ant);
-            self.terminal.draw_screen();
+        let signals = Signals::new([SIGINT, SIGWINCH]);
+
+        thread::spawn(move ||  {
+            for signal in signals.unwrap().forever() {
+                if signal == SIGINT {
+                    running_for_handler.store(false, Ordering::Relaxed);
+                    break;
+                } else if signal == SIGWINCH {
+                    terminal_size_changed_handler.store(true, Ordering::Relaxed);
+                }
+            }
+        });
+
+        self.terminal.draw_screen();
+
+        while running.load(Ordering::Relaxed) {
+            if terminal_size_changed.swap(false, Ordering::Relaxed) {
+                self.resize_screen();
+                self.terminal.draw_screen();
+            } else {
+                self.terminal.draw_elem(&mut self.ant);
+            }
+            thread::sleep(time::Duration::from_millis(33));
         }
+        Ok(())
+    }
+
+    fn resize_screen(&mut self) {
+        self.terminal.update_terminal_state();
+
+        let (x, y, direction, _) =
+            AntTermVisualization::get_start_position(self.terminal.cols(), self.terminal.rows() * 2);
+        let ant = Ant::new(
+            x,
+            y,
+            self.terminal.cols(),
+            self.terminal.rows() * 2,
+            direction,
+        );
+        self.ant = ant;
     }
 
     fn get_start_position(cols: usize, rows: usize) -> (usize, usize, AntDirection, TerminalCellColor) {
@@ -110,5 +154,29 @@ impl TerminalComponentDraw for Ant {
             },
             _ => panic!("Color is not defined for algorithm: {}", buffer[curr_y][curr_x]),
         };
+
+
+        let mut stdout = io::stdout().lock();
+        if curr_y % 2 == 0 {
+            write!(
+                stdout,
+                "\x1b[{};{}H{}{}▀\x1b[0m",
+                curr_y / 2,
+                curr_x,
+                buffer[curr_y][curr_x].set_fg_color(),
+                buffer[curr_y + 1][curr_x].set_bg_color(),
+            ).unwrap();
+            stdout.flush().unwrap();
+        } else {
+            write!(
+                stdout,
+                "\x1b[{};{}H{}{}▄\x1b[0m",
+                curr_y / 2,
+                curr_x,
+                buffer[curr_y][curr_x].set_fg_color(),
+                buffer[curr_y - 1][curr_x].set_bg_color(),
+            ).unwrap();
+        }
+        stdout.flush().unwrap();
     }
 }
